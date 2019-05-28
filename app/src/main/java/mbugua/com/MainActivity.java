@@ -14,12 +14,21 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
         public  static final String NOTE_POSITION ="mbugua.com.NOTE_POSITION";
+    public  static final String ORIGINAL_NOTE_COURSE_ID ="mbugua.com.ORIGINAL_NOTE_COURSE_ID";
+    public  static final String ORIGINAL_NOTE_TITLE ="mbugua.com.ORIGINAL_NOTE_TITLE";
+public  static final String ORIGINAL_NOTE_TEXT ="mbugua.com.ORIGINAL_NOTE_TEXT";
+
     public static final int POSITION_NOT_SET = -1;
     private NoteInfo mNote;
     private boolean mIsNewNote;
     private Spinner mSpinnerCourses;
     private EditText mTextNoteTitle;
     private EditText mTextNoteText;
+    private int mNotePosition;
+    private boolean mIsCancelling;
+    private String mOriginalNoteCourseId;
+    private String mOriginalNoteTitle;
+    private String mOriginalNoteText;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,22 +41,103 @@ public class MainActivity extends AppCompatActivity {
 
         
         List<CourseInfo> courses = DataManager.getInstance().getCourses();
-        ArrayAdapter<CourseInfo> adapterCourses = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1, courses);
-
+        ArrayAdapter<CourseInfo> adapterCourses = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, courses);
         adapterCourses.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         mSpinnerCourses.setAdapter(adapterCourses);
 
         readDisplayStateValues();
+
+        if (savedInstanceState==null) {
+            saveOriginalNoteValue();
+        }else {
+            restoreOriginalNoteValues(savedInstanceState);
+
+        }
+
+
+
 
         mTextNoteTitle = (EditText) findViewById(R.id.text_note_title);
         mTextNoteText = (EditText) findViewById(R.id.text_note_text);
 
 
 
-        if(!mIsNewNote)
-             displayNote(mSpinnerCourses, mTextNoteTitle, mTextNoteText);
+        if(mIsNewNote) {
+            createNewNote();
+        }else {
+
+            displayNote(mSpinnerCourses, mTextNoteTitle, mTextNoteText);
 
 
+        }
+
+
+
+
+    }
+
+    private void restoreOriginalNoteValues(Bundle savedInstanceState) {
+        mOriginalNoteCourseId = savedInstanceState.getString(ORIGINAL_NOTE_COURSE_ID);
+        mOriginalNoteTitle = savedInstanceState.getString(ORIGINAL_NOTE_TITLE);
+        mOriginalNoteText = savedInstanceState.getString(ORIGINAL_NOTE_TEXT);
+    }
+
+    private void saveOriginalNoteValue() {
+        if (mIsNewNote)
+            return;
+        mOriginalNoteCourseId = mNote.getCourse().getCourseId();
+        mOriginalNoteTitle = mNote.getTitle();
+        mOriginalNoteText = mNote.getText();
+
+    }
+
+    private void createNewNote() {
+        DataManager dm = DataManager.getInstance();
+        final int mNotePosition = dm.createNewNote();
+        mNote = dm.getNotes().get(mNotePosition);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        if (mIsCancelling) {
+            if (mIsNewNote) {
+                DataManager.getInstance().removeNote(mNotePosition);
+            }else {
+                storePreviousNoteValues();
+
+            }
+
+        }else {
+
+            saveNote();
+        }
+
+    }
+
+    private void storePreviousNoteValues() {
+        CourseInfo course = DataManager.getInstance().getCourse(mOriginalNoteCourseId);
+        mNote.setCourse(course);
+        mNote.setTitle(mOriginalNoteTitle);
+        mNote.setText(mOriginalNoteText);
+
+
+    }
+
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+        outState.putString(ORIGINAL_NOTE_COURSE_ID, mOriginalNoteCourseId);
+        outState.putString(ORIGINAL_NOTE_TEXT, mOriginalNoteText);
+        outState.putString(ORIGINAL_NOTE_TITLE, mOriginalNoteTitle);
+
+    }
+
+    private void saveNote() {
+        mNote.setCourse((CourseInfo) mSpinnerCourses.getSelectedItem());
+
+        mNote.setText(mTextNoteText.getText().toString());
+        mNote.setTitle(mTextNoteTitle.getText().toString());
 
     }
 
@@ -58,6 +148,8 @@ public class MainActivity extends AppCompatActivity {
 
         textNoteTitle.setText(mNote.getTitle());
         textNoteText.setText(mNote.getText());
+
+
 
 
     }
@@ -92,6 +184,10 @@ public class MainActivity extends AppCompatActivity {
             sendEmail();
             
             return true;
+        }else if (id == R.id.action_cancel) {
+            mIsCancelling = true;
+            finish();
+            
         }
 
         return super.onOptionsItemSelected(item);
