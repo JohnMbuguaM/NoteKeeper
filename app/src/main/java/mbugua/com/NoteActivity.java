@@ -12,7 +12,7 @@ import android.widget.Spinner;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+public class NoteActivity extends AppCompatActivity {
         public  static final String NOTE_POSITION ="mbugua.com.NOTE_POSITION";
     public  static final String ORIGINAL_NOTE_COURSE_ID ="mbugua.com.ORIGINAL_NOTE_COURSE_ID";
     public  static final String ORIGINAL_NOTE_TITLE ="mbugua.com.ORIGINAL_NOTE_TITLE";
@@ -33,7 +33,7 @@ public  static final String ORIGINAL_NOTE_TEXT ="mbugua.com.ORIGINAL_NOTE_TEXT";
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_note);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
@@ -196,11 +196,12 @@ public  static final String ORIGINAL_NOTE_TEXT ="mbugua.com.ORIGINAL_NOTE_TEXT";
     private void sendEmail() {
         CourseInfo course = (CourseInfo) mSpinnerCourses.getSelectedItem();
         String subject = mTextNoteTitle.getText().toString();
-        String text = "Check what i learned on pluralsight course\" +" +
+        String text = "Check what i learned on pluralsight course\" " +
                 course.getTitle() + "\"\n" + mTextNoteText.getText().toString();
         Intent intent = new Intent(Intent.ACTION_SEND);
         intent.setType("message/rfc2822");
         intent.putExtra(Intent.EXTRA_SUBJECT, subject);
+        intent.putExtra(Intent.EXTRA_TEXT, text);
         startActivity(intent);
     }
 }
