@@ -62,9 +62,8 @@ public  static final String ORIGINAL_NOTE_TEXT ="mbugua.com.ORIGINAL_NOTE_TEXT";
 
 
 
-        if(mIsNewNote) {
-            createNewNote();
-        }else {
+        if(!mIsNewNote) {
+
 
             displayNote(mSpinnerCourses, mTextNoteTitle, mTextNoteText);
 
@@ -93,8 +92,8 @@ public  static final String ORIGINAL_NOTE_TEXT ="mbugua.com.ORIGINAL_NOTE_TEXT";
 
     private void createNewNote() {
         DataManager dm = DataManager.getInstance();
-        final int mNotePosition = dm.createNewNote();
-        mNote = dm.getNotes().get(mNotePosition);
+        mNotePosition = dm.createNewNote();
+//        mNote = dm.getNotes().get(mNotePosition);
     }
 
     @Override
@@ -156,12 +155,14 @@ public  static final String ORIGINAL_NOTE_TEXT ="mbugua.com.ORIGINAL_NOTE_TEXT";
 
     private void readDisplayStateValues() {
         Intent intent = getIntent();
-        int position = intent.getIntExtra(NOTE_POSITION, POSITION_NOT_SET);
-        mIsNewNote = position ==POSITION_NOT_SET;
-        if(!mIsNewNote)
-            mNote = DataManager.getInstance().getNotes().get(position);
-
+        mNotePosition = intent.getIntExtra(NOTE_POSITION, POSITION_NOT_SET);
+        mIsNewNote = mNotePosition ==POSITION_NOT_SET;
+        if(mIsNewNote) {
+            createNewNote();
+        }
+        mNote=DataManager.getInstance().getNotes().get(mNotePosition);
     }
+
 
 
 
@@ -188,9 +189,30 @@ public  static final String ORIGINAL_NOTE_TEXT ="mbugua.com.ORIGINAL_NOTE_TEXT";
             mIsCancelling = true;
             finish();
             
+        } else if (id == R.id.action_next) {
+            MoveNext();
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+        MenuItem item = menu.findItem(R.id.action_next);
+        int LastNoteIndex = DataManager.getInstance().getNotes().size() -1;
+        item.setEnabled(mNotePosition<LastNoteIndex);
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    private void MoveNext() {
+        saveNote();
+
+
+        mNote = DataManager.getInstance().getNotes().get(++mNotePosition);
+
+        saveOriginalNoteValue();
+        displayNote(mSpinnerCourses,mTextNoteTitle,mTextNoteText);
+        invalidateOptionsMenu();
     }
 
     private void sendEmail() {
