@@ -1,6 +1,8 @@
 package mbugua.com;
 
 import android.content.Intent;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -28,14 +30,21 @@ public class MainActivity extends AppCompatActivity
     private LinearLayoutManager mNotesLayoutManger;
     private CourseRecyclerAdapter mCourseRecyclerAdapter;
     private GridLayoutManager mCoursesLayoutManager;
+    private NoteKeeperOpenHelper mDbOpenHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+
         setContentView(R.layout.activity_main);
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        mDbOpenHelper = new NoteKeeperOpenHelper(this);
         FloatingActionButton fab = findViewById(R.id.fab);
+
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -52,6 +61,13 @@ public class MainActivity extends AppCompatActivity
         navigationView.setNavigationItemSelectedListener(this);
 
         initializeDisplayContent();
+
+    }
+
+    @Override
+    protected void onDestroy() {
+        mDbOpenHelper.close();
+        super.onDestroy();
     }
 
     @Override
@@ -84,6 +100,8 @@ public class MainActivity extends AppCompatActivity
     private void DisplayNotes() {
         mRecyclerItems.setLayoutManager(mNotesLayoutManger);
         mRecyclerItems.setAdapter(mNoteRecyclerAdapter);
+
+        SQLiteDatabase db = mDbOpenHelper.getReadableDatabase();
 
         selectNavigationMenuItem(R.id.nav_notes);
 
